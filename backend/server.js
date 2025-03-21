@@ -39,22 +39,22 @@ const Model = mongoose.model('Conversation', convoSchema);
 
 app.post('/conversations', async (req, res) => {
   try {
-    
-      const { sender, message, timestamp, conversationId } = req.body;
-  
-      const newMessage = { sender, message, timestamp };
-  
-      const updatedConversation = await Model.findOneAndUpdate(
-        { conversationId },
-        { $push: { messages: newMessage } },
-        { upsert: true, new: true }
-      );
-      res.json(updatedConversation);
-  
+
+    const { sender, message, timestamp, conversationId } = req.body;
+
+    const newMessage = { sender, message, timestamp };
+
+    const updatedConversation = await Model.findOneAndUpdate(
+      { conversationId },
+      { $push: { messages: newMessage } },
+      { upsert: true, new: true }
+    );
+    res.json(updatedConversation);
+
   }
-  catch(error){
-    console.error('Error in Insertion:',error);
-    res.status(500).json({error:'Failed to Insert Data!'});
+  catch (error) {
+    console.error('Error in Insertion:', error);
+    res.status(500).json({ error: 'Failed to Insert Data!' });
   }
 })
 app.get('/conversations/:conversationId', async (req, res) => {
@@ -82,12 +82,16 @@ app.post('/api/gemini', async (req, res) => {
 
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
-      memoryText = convo.messages
-        .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
+      const userMessages = convo.messages.filter(m => m.sender === 'user');
+      memoryText = userMessages
+        .map(m => `User: ${m.message}`)
         .join('\n');
     }
 
+    // Construct the final prompt with only user context
     const finalPrompt = `${memoryText}\nUser: ${prompt}\nJARVIS:`;
+
+
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
     });
