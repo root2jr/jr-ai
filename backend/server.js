@@ -58,6 +58,15 @@ app.post('/conversations', async (req, res) => {
     res.status(500).json({error:'Failed to Insert Data!'});
   }
 })
+app.get('/conversations/:conversationId', async (req, res) => {
+  try {
+    const convo = await Model.findOne({ conversationId: req.params.conversationId });
+    res.json(convo ? convo.messages : []);
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    res.status(500).json({ error: 'Failed to fetch conversation' });
+  }
+});
 
 
 
@@ -68,11 +77,20 @@ app.post('/conversations', async (req, res) => {
 
 app.post('/api/gemini', async (req, res) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, conversationId } = req.body;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+    const convo = await Model.findOne({ conversationId });
 
+    let memoryText = "";
+    if (convo && convo.messages.length > 0) {
+      memoryText = convo.messages
+        .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
+        .join('\n');
+    }
+
+    const finalPrompt = `${memoryText}\nUser: ${prompt}\nJARVIS:`;
     const response = await axios.post(url, {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: [{ text: finalPrompt }] }],
     });
     const aiResponse = response.data.candidates[0].content.parts[0].text;
     res.json({ response: aiResponse });
