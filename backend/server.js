@@ -28,6 +28,8 @@ const messageSchema = new mongoose.Schema({
   message: String,
   timestamp: String,
   conversationId: String,
+  username: String,
+  context: String,
 })
 
 const convoSchema = new mongoose.Schema({
@@ -42,7 +44,17 @@ app.post('/conversations', async (req, res) => {
 
     const { sender, message, timestamp, conversationId } = req.body;
 
-    const newMessage = { sender, message, timestamp };
+    const newMessage = { sender, message, timestamp, username: "", context: "" };
+    
+    const { username }= req.body.username;
+    const { context } = req.body.context;
+
+    if(username){
+      newMessage.username = username;
+    }
+    if(context){
+      newMessage.context = context;
+    }
 
     const updatedConversation = await Model.findOneAndUpdate(
       { conversationId },
@@ -77,6 +89,9 @@ app.get('/conversations/:conversationId', async (req, res) => {
 app.post('/api/gemini', async (req, res) => {
   try {
     const { prompt, conversationId } = req.body;
+
+
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const convo = await Model.findOne({ conversationId });
 
