@@ -41,21 +41,10 @@ const Model = mongoose.model('Conversation', convoSchema);
 
 app.post('/conversations', async (req, res) => {
   try {
+    const { sender, message, timestamp, conversationId, username = "", context = "" } = req.body;
 
-    const { sender, message, timestamp, conversationId } = req.body;
-
-    const newMessage = { sender, message, timestamp, username: "", context: "" };
+    const newMessage = { sender, message, timestamp, username, context };
     
-    const { username }= req.body.username;
-    const { context } = req.body.context;
-
-    if(username){
-      newMessage.username = username;
-    }
-    if(context){
-      newMessage.context = context;
-    }
-
     const updatedConversation = await Model.findOneAndUpdate(
       { conversationId },
       { $push: { messages: newMessage } },
