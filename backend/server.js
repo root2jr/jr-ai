@@ -82,11 +82,12 @@ app.post('/api/gemini', async (req, res) => {
 
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
-      const userMessages = convo.messages.filter(m => m.sender === 'user');
-      memoryText = userMessages
-        .map(m => `User: ${m.message}`)
+      const recentMessages = convo.messages.slice(-6); // only last 6 messages
+      memoryText = recentMessages
+        .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
         .join('\n');
     }
+    
 
     // Construct the final prompt with only user context
     const finalPrompt = `${memoryText}\nUser: ${prompt}\nJARVIS:`;
