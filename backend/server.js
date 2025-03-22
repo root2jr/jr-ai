@@ -36,10 +36,13 @@ const convoSchema = new mongoose.Schema({
 
 const Model = mongoose.model('Conversation', convoSchema);
 
+
 app.post('/conversations', async (req, res) => {
   try {
     const { sender, message, timestamp, conversationId, username = "", context = "" } = req.body;
-
+    if(username){
+      name = username;
+    }
     const newMessage = { sender, message, timestamp, username, context };
     
     const updatedConversation = await Model.findOneAndUpdate(
@@ -75,9 +78,11 @@ app.get('/conversations/:conversationId', async (req, res) => {
 app.post('/api/gemini', async (req, res) => {
   try {
     const { prompt, conversationId } = req.body;
-
-
-
+    let nameText = "";
+    let usermessagewithme = convo.messages.slice().reverse().find(messages => messages.sender === 'username');
+    if (usermessagewithme && usermessagewithme.username) {
+        nameText = `My name is ${usermessagewithme.username}.`;
+    }
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const convo = await Model.findOne({ conversationId });
 
@@ -90,8 +95,7 @@ app.post('/api/gemini', async (req, res) => {
     }
     
 
-    // Construct the final prompt with only user context
-    const finalPrompt = `${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = ` username:${nameText}\n ${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
 
     const response = await axios.post(url, {
