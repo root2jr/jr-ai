@@ -71,6 +71,8 @@ app.post('/api/gemini', async (req, res) => {
       nameText = `My name is ${userMsgWithName.username}.`;
     }
 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
       const recentMessages = convo.messages.slice(-6);
@@ -79,21 +81,22 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const finalPrompt = `username: ${nameText}\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `${nameText}\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
     });
 
     const aiResponse = response.data.candidates[0].content.parts[0].text;
     res.json({ response: aiResponse });
+
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
-})
+});
+
 
 app.listen(PORT, () => {
   console.log('Server is Running Sucessfully!');
