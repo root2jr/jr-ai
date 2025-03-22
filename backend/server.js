@@ -14,10 +14,7 @@ const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully!'))
   .catch((error) => console.error('MongoDB Connection Failed:', error));
 
