@@ -13,12 +13,9 @@ const API_KEY = process.env.API_KEY;
 const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT;
 
-
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected Successfully!'))
   .catch((error) => console.error('MongoDB Connection Failed:', error));
-
-
 
 const messageSchema = new mongoose.Schema({
   sender: String,
@@ -36,28 +33,23 @@ const convoSchema = new mongoose.Schema({
 
 const Model = mongoose.model('Conversation', convoSchema);
 
-
 app.post('/conversations', async (req, res) => {
   try {
     const { sender, message, timestamp, conversationId, username = "", context = "" } = req.body;
-    if(username){
-      name = username;
-    }
     const newMessage = { sender, message, timestamp, username, context };
-    
     const updatedConversation = await Model.findOneAndUpdate(
       { conversationId },
       { $push: { messages: newMessage } },
       { upsert: true, new: true }
     );
     res.json(updatedConversation);
-
   }
   catch (error) {
     console.error('Error in Insertion:', error);
     res.status(500).json({ error: 'Failed to Insert Data!' });
   }
 })
+
 app.get('/conversations/:conversationId', async (req, res) => {
   try {
     const convo = await Model.findOne({ conversationId: req.params.conversationId });
@@ -66,41 +58,34 @@ app.get('/conversations/:conversationId', async (req, res) => {
     console.error("Error fetching conversation:", error);
     res.status(500).json({ error: 'Failed to fetch conversation' });
   }
-});
-
-
-
-
-
-
-
+})
 
 app.post('/api/gemini', async (req, res) => {
   try {
     const { prompt, conversationId } = req.body;
-    let nameText = "";
-    let usermessagewithme = convo.messages.slice().reverse().find(messages => messages.sender === 'username');
-    if (usermessagewithme && usermessagewithme.username) {
-        nameText = `My name is ${usermessagewithme.username}.`;
-    }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const convo = await Model.findOne({ conversationId });
+
+    let nameText = "";
+    const userMsgWithName = convo?.messages?.slice().reverse().find(msg => msg.username);
+    if (userMsgWithName && userMsgWithName.username) {
+      nameText = `My name is ${userMsgWithName.username}.`;
+    }
 
     let memoryText = "";
     if (convo && convo.messages.length > 0) {
-      const recentMessages = convo.messages.slice(-6); // only last 6 messages
+      const recentMessages = convo.messages.slice(-6);
       memoryText = recentMessages
         .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
         .join('\n');
     }
-    
 
-    const finalPrompt = ` username:${nameText}\n ${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `username: ${nameText}\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
-
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
     });
+
     const aiResponse = response.data.candidates[0].content.parts[0].text;
     res.json({ response: aiResponse });
     console.log('Response Received Successfully!', JSON.stringify(response.data, null, 2));
@@ -108,7 +93,7 @@ app.post('/api/gemini', async (req, res) => {
     console.error("Error calling Gemini API:", error);
     res.status(500).json({ error: "Failed to fetch response from Gemini" });
   }
-});
+})
 
 app.listen(PORT, () => {
   console.log('Server is Running Sucessfully!');
