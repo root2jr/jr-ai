@@ -81,7 +81,7 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const finalPrompt = `${nameText}\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `username:${nameText}just rememeber it and dont send it to the user\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
