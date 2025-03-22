@@ -61,6 +61,7 @@ app.get('/conversations/:conversationId', async (req, res) => {
 })
 
 app.post('/api/gemini', async (req, res) => {
+  
   try {
     const { prompt, conversationId } = req.body;
     const convo = await Model.findOne({ conversationId });
@@ -81,7 +82,7 @@ app.post('/api/gemini', async (req, res) => {
         .join('\n');
     }
 
-    const finalPrompt = `username:${nameText}just rememeber it and dont send it to the user\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `username:${nameText}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
