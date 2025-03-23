@@ -22,8 +22,8 @@ const messageSchema = new mongoose.Schema({
   message: String,
   timestamp: String,
   conversationId: String,
-  username: String,
-  context: String,
+  
+  
 })
 
 const convoSchema = new mongoose.Schema({
@@ -35,7 +35,7 @@ const Model = mongoose.model('Conversation', convoSchema);
 
 app.post('/conversations', async (req, res) => {
   try {
-    const { sender, message, timestamp, conversationId, username = "", context = "" } = req.body;
+    const { sender, message, timestamp, conversationId } = req.body;
     const newMessage = { sender, message, timestamp, username, context };
     const updatedConversation = await Model.findOneAndUpdate(
       { conversationId },
