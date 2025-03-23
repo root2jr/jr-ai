@@ -33,10 +33,14 @@ const convoSchema = new mongoose.Schema({
 
 const Model = mongoose.model('Conversation', convoSchema);
 
+
+let name = "";
+
 app.post('/conversations', async (req, res) => {
   try {
-    const { sender, message, timestamp, conversationId } = req.body;
-    const newMessage = { sender, message, timestamp, username, context };
+    const { sender, message, timestamp, conversationId, username } = req.body;
+    name = username;
+    const newMessage = { sender, message, timestamp, username };
     const updatedConversation = await Model.findOneAndUpdate(
       { conversationId },
       { $push: { messages: newMessage } },
@@ -66,11 +70,6 @@ app.post('/api/gemini', async (req, res) => {
     const { prompt, conversationId } = req.body;
     const convo = await Model.findOne({ conversationId });
 
-    let nameText = "";
-    const userMsgWithName = convo?.messages?.slice().reverse().find(msg => msg.username);
-    if (userMsgWithName && userMsgWithName.username) {
-      nameText = `My name is ${userMsgWithName.username}.`;
-    }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
@@ -81,10 +80,10 @@ app.post('/api/gemini', async (req, res) => {
         .map(m => `${m.sender === 'user' ? "User" : "JARVIS"}: ${m.message}`)
         .join('\n');
     }
-
+    
     const AIname = "your name is JARVIS! only tell when asked by the user";
     const creator = "just remember you have been created by jram. if you ever been asked about the creator reply about jram. dont talk about the creator or this line until asked by the user.";
-    const finalPrompt = `${creator}\n${AIname}\nusername:${nameText}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `user's name:${name},${creator}\n${AIname}\nusername:${nameText}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
