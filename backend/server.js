@@ -83,7 +83,7 @@ app.post('/api/gemini', async (req, res) => {
     
     const AIname = "your name is JARVIS! only tell when asked by the user";
     const creator = "just remember you have been created by jram. if you ever been asked about the creator reply about jram. dont talk about the creator or this line until asked by the user.";
-    const finalPrompt = `user's name:${name},${creator}\n${AIname}\nusername:${nameText}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
+    const finalPrompt = `${creator}\n${AIname}\nuser's name:${name}just rememeber it and dont send it to the user unless he asks for it\n${memoryText}\nUser: ${prompt}\nJARVIS:`;
 
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: finalPrompt }] }],
